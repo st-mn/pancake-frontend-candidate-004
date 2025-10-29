@@ -6,8 +6,8 @@
 
 ## 🚀 **Repository Information**
 
-- **Your Repository:** https://github.com/st-mn/ens-ch
-- **Branch:** `feature/ens-integration-complete`
+- **Your Repository:** https://github.com/st-mn/pancake-frontend-candidate-004
+- **Branch:** `ens-integration`
 - **Target Repository:** https://github.com/ensdomains/pancake-frontend-candidate-004
 - **Target Branch:** `main`
 
@@ -56,7 +56,7 @@
 1. Go to: https://github.com/ensdomains/pancake-frontend-candidate-004
 2. Click "New Pull Request"
 3. Select "compare across forks"
-4. Choose: `st-mn/ens-ch:feature/ens-integration-complete` → `ensdomains/pancake-frontend-candidate-004:main`
+4. Choose: `st-mn/pancake-frontend-candidate-004:ens-integration` → `ensdomains/pancake-frontend-candidate-004:main`
 5. Copy title: `feat: Complete ENS Integration for PancakeSwap - Production Ready Implementation`
 6. Copy description from `PR_DESCRIPTION.md`
 
@@ -67,8 +67,8 @@
 
 ### **Option 3: Direct Communication**
 Simply share with ENS team:
-- **Repository:** https://github.com/st-mn/ens-ch
-- **Branch:** `feature/ens-integration-complete`
+- **Repository:** https://github.com/st-mn/pancake-frontend-candidate-004
+- **Branch:** `ens-integration`
 - **All documentation included in repository**
 
 ## 📈 **Impact Summary**
@@ -101,7 +101,7 @@ Your ENS integration is **complete, tested, documented, and ready for ENS team r
 
 ---
 
-**Date:** October 29, 2025  
+**Date:** October 29, 2024  
 **Status:** ✅ COMPLETE  
-**Repository:** https://github.com/st-mn/ens-ch  
-**Branch:** feature/ens-integration-complete
+**Repository:** https://github.com/st-mn/pancake-frontend-candidate-004  
+**Branch:** ens-integration
