@@ -26,11 +26,14 @@ import { BalanceData } from 'hooks/useAddressBalance'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useERC20 } from 'hooks/useContract'
 import { useCurrencyUsdPrice } from 'hooks/useCurrencyUsdPrice'
+import { useDomainNameForAddress } from 'hooks/useDomain'
+import { useGetENSAddressByName } from 'hooks/useGetENSAddressByName'
 import useNativeCurrency from 'hooks/useNativeCurrency'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { logGTMGiftPreviewEvent } from 'utils/customGTMEventTracking'
 import { maxAmountSpend } from 'utils/maxAmountSpend'
+import { safeGetAddress } from 'utils'
 import { checksumAddress, formatUnits, isAddress, zeroAddress } from 'viem'
 import { CreateGiftView } from 'views/Gift/components/CreateGiftView'
 import { SendGiftToggle } from 'views/Gift/components/SendGiftToggle'
@@ -98,8 +101,16 @@ export const SendAssetForm: React.FC<SendAssetFormProps> = ({ asset, onViewState
   const isSendGiftSupported = isSendGift && isGiftSupported
 
   const { t } = useTranslation()
-  const [address, setAddress] = useState<string | null>(null)
-  const debouncedAddress = useDebounce(address, 500)
+  const [addressInput, setAddressInput] = useState<string>('')
+  const debouncedAddressInput = useDebounce(addressInput, 500)
+  const recipientENSAddress = useGetENSAddressByName(debouncedAddressInput)
+  
+  // Resolved address: either direct address or ENS-resolved address
+  const address = safeGetAddress(addressInput) ? addressInput : safeGetAddress(recipientENSAddress)
+  
+  // Get ENS info for display purposes when an address is resolved
+  const { domainName: recipientDomainName, avatar: recipientAvatar } = useDomainNameForAddress(address)
+  
   const [amount, setAmount] = useState('')
   const [addressError, setAddressError] = useState('')
   const [estimatedFee, setEstimatedFee] = useState<string | null>(null)
@@ -221,7 +232,7 @@ export const SendAssetForm: React.FC<SendAssetFormProps> = ({ asset, onViewState
       )
       // Reset form after successful transaction
       setAmount('')
-      setAddress('')
+      setAddressInput('')
     }
 
     return receipt
@@ -240,20 +251,20 @@ export const SendAssetForm: React.FC<SendAssetFormProps> = ({ asset, onViewState
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
-    setAddress(value)
+    setAddressInput(value)
   }
 
   // Use debounced address for validation to avoid checking on every keystroke
   useEffect(() => {
-    if (debouncedAddress && !isAddress(debouncedAddress)) {
-      setAddressError(t('Invalid wallet address'))
+    if (debouncedAddressInput && !address) {
+      setAddressError(t('Invalid wallet address or ENS name'))
     } else {
       setAddressError('')
     }
-  }, [debouncedAddress, t])
+  }, [debouncedAddressInput, address, t])
 
   const handleClearAddress = () => {
-    setAddress('')
+    setAddressInput('')
     setAddressError('')
   }
 
@@ -356,13 +367,13 @@ export const SendAssetForm: React.FC<SendAssetFormProps> = ({ asset, onViewState
                 <AddressInputWrapper>
                   <Box position="relative">
                     <Input
-                      value={address ?? ''}
+                      value={addressInput}
                       onChange={handleAddressChange}
-                      placeholder="Recipient address"
+                      placeholder={t('Recipient address or ENS name')}
                       style={{ height: '64px' }}
                       isError={Boolean(addressError)}
                     />
-                    {address && (
+                    {addressInput && (
                       <ClearButton
                         scale="sm"
                         onClick={handleClearAddress}
@@ -373,6 +384,32 @@ export const SendAssetForm: React.FC<SendAssetFormProps> = ({ asset, onViewState
                       </ClearButton>
                     )}
                   </Box>
+                  {/* Show ENS name/avatar info when resolved */}
+                  {address && addressInput && address !== addressInput && (
+                    <FlexGap gap="8px" alignItems="center" mt="8px" p="8px" 
+                           style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', borderRadius: '8px' }}>
+                      {recipientAvatar && (
+                        <Box width="24px" height="24px" borderRadius="50%" overflow="hidden">
+                          <img 
+                            src={recipientAvatar} 
+                            alt="ENS Avatar" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </Box>
+                      )}
+                      <FlexGap flexDirection="column" gap="2px">
+                        <Text fontSize="12px" color="textSubtle">
+                          {t('Resolved to:')}
+                        </Text>
+                        <Text fontSize="14px" fontWeight="500">
+                          {recipientDomainName || `${address.slice(0, 6)}...${address.slice(-4)}`}
+                        </Text>
+                        <Text fontSize="12px" color="textSubtle" style={{ fontFamily: 'monospace' }}>
+                          {address}
+                        </Text>
+                      </FlexGap>
+                    </FlexGap>
+                  )}
                 </AddressInputWrapper>
                 {addressError && <ErrorMessage>{addressError}</ErrorMessage>}
               </Box>

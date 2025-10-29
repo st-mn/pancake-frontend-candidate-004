@@ -1,3 +1,4 @@
+import { useDebounce } from '@pancakeswap/hooks'
 import { useTranslation } from '@pancakeswap/localization'
 import { Token } from '@pancakeswap/sdk'
 import {
@@ -15,6 +16,7 @@ import Row, { RowBetween, RowFixed } from 'components/Layout/Row'
 import { CurrencyLogo } from 'components/Logo'
 import { useTokenByChainId } from 'hooks/Tokens'
 import { useActiveChainId } from 'hooks/useActiveChainId'
+import { useGetENSAddressByName } from 'hooks/useGetENSAddressByName'
 import { RefObject, useCallback, useMemo, useRef, useState } from 'react'
 import { useRemoveUserAddedToken } from 'state/user/hooks'
 import useUserAddedTokens from 'state/user/hooks/useUserAddedTokens'
@@ -54,17 +56,21 @@ export default function ManageTokens({
   const { t } = useTranslation()
 
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
+  const ensResolvedAddress = useGetENSAddressByName(debouncedSearchQuery)
 
   // manage focus on modal show
   const inputRef = useRef<HTMLInputElement>()
   const handleInput = useCallback((event) => {
     const input = event.target.value
-    const checksummedInput = safeGetAddress(input)
-    setSearchQuery(checksummedInput || input)
+    setSearchQuery(input)
   }, [])
 
-  // if they input an address, use it
-  const searchToken = useTokenByChainId(searchQuery, chainId)
+  // Use ENS-resolved address if available, otherwise use original query
+  const tokenAddress = safeGetAddress(searchQuery) ? searchQuery : safeGetAddress(ensResolvedAddress)
+  
+  // if they input an address or ENS name, use it
+  const { data: searchToken } = useTokenByChainId(tokenAddress || '', chainId)
 
   // all tokens for local list
   const userAddedTokens: Token[] = useUserAddedTokens(chainId)
@@ -108,7 +114,7 @@ export default function ManageTokens({
     )
   }, [userAddedTokens, chainId, removeToken])
 
-  const isAddressValid = searchQuery === '' || safeGetAddress(searchQuery)
+  const isAddressValid = searchQuery === '' || safeGetAddress(searchQuery) || safeGetAddress(ensResolvedAddress)
 
   return (
     <Wrapper>
@@ -118,7 +124,7 @@ export default function ManageTokens({
             <Input
               id="token-search-input"
               scale="lg"
-              placeholder="0x0000"
+              placeholder={t('Token address or ENS name')}
               value={searchQuery}
               autoComplete="off"
               ref={inputRef as RefObject<HTMLInputElement>}
@@ -126,7 +132,7 @@ export default function ManageTokens({
               isWarning={!isAddressValid}
             />
           </Row>
-          {!isAddressValid && <Text color="failure">{t('Enter valid token address')}</Text>}
+          {!isAddressValid && <Text color="failure">{t('Enter valid token address or ENS name')}</Text>}
           {searchToken && (
             <ImportRow
               token={searchToken}
