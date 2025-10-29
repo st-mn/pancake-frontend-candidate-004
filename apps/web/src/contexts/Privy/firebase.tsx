@@ -339,7 +339,7 @@ export function useFirebaseAuth() {
 export async function retriggerFirebaseAuth() {
   try {
     const auth = getAuth(firebaseApp)
-    const currentUser = auth.currentUser
+    const { currentUser } = auth
 
     if (!currentUser) {
       return false

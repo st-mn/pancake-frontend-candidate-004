@@ -38,7 +38,7 @@ export const useNativeCurrencyInstead = ({ baseCurrency, quoteCurrency, feeAmoun
 
   const handleUseNative = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const checked = event.target.checked
+      const { checked } = event.target
 
       if (!baseCurrency || !quoteCurrency) return
 
